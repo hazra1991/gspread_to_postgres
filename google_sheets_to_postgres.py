@@ -5,7 +5,7 @@ import os
 import sqlalchemy as sa
 from sqlalchemy.engine import make_url
 from sqlalchemy.sql.expression import true
-from sqlalchemy.types import Integer, Text, String, DateTime
+# from sqlalchemy.types import Integer, Text, String, DateTime
 import datetime
 
 from sqlalchemy.util.deprecations import SQLALCHEMY_WARN_20
