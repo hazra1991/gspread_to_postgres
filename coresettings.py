@@ -40,8 +40,8 @@ def perform_psql_check(dic):
     if not "host" in dic and not isinstance(dic.get("host"),str):
         msg =  "host is mandatory and should be a string"
         raise WrongSettings(msg)
-    if not "port" in dic and not isinstance(dic.get("port"),str):
-        msg =  "port is mandatory and should be a string"
+    if not "port" in dic and not isinstance(dic.get("port"),int):
+        msg =  "port is mandatory and should be a number"
         raise WrongSettings(msg)
     if not "username" in dic and not isinstance(dic.get("username"),str):
         msg =  "username is mandatory and should be a string"

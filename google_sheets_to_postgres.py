@@ -4,11 +4,8 @@ import pandas as pd
 import os
 import sqlalchemy as sa
 from sqlalchemy.engine import make_url
-from sqlalchemy.sql.expression import true
 # from sqlalchemy.types import Integer, Text, String, DateTime
 import datetime
-
-from sqlalchemy.util.deprecations import SQLALCHEMY_WARN_20
 
 
 class GoogleSheetHelper:
@@ -79,10 +76,10 @@ def create_database(url,dbname):
 
  
     
-def excecute():
+def execute():
 
-    from settings import Spreadsheet_config as sp_config
-    from settings import PostgresSQL_config as psql_config
+    from .settings import Spreadsheet_config as sp_config
+    from .settings import PostgresSQL_config as psql_config
 
     if psql_config.__dict__.get('database'):
         database =  psql_config.database
@@ -122,6 +119,4 @@ def excecute():
 
 
 if __name__ == "__main__":
-    pass
-
-    excecute()
+    execute()
