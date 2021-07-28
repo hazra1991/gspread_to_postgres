@@ -8,6 +8,8 @@ from sqlalchemy.sql.expression import true
 from sqlalchemy.types import Integer, Text, String, DateTime
 import datetime
 
+from sqlalchemy.util.deprecations import SQLALCHEMY_WARN_20
+
 
 class GoogleSheetHelper:
     """Helper class to pull data from googlesheets"""
@@ -60,7 +62,7 @@ def _set_url_database(url , databasename):
 def database_exists(url:str,dbname:str)->bool:
     """Checkes if the database exists and returns bool"""
 
-    query  =  f'SELECT 1 FROM pg_database WHERE datname="{dbname}"'
+    query  =  f"SELECT 1 FROM pg_database WHERE datname='{dbname}'"
     en = sa.create_engine(url)
     with en.connect() as con:
         r = con.scalar(query)
@@ -75,57 +77,51 @@ def create_database(url,dbname):
     with en.connect() as con:
         con.execute(sql)
 
-
-
-
-
-
-
+ 
+    
 def excecute():
 
-    from settings import Spreadsheet_config as sp_config, 
+    from settings import Spreadsheet_config as sp_config
     from settings import PostgresSQL_config as psql_config
 
     if psql_config.__dict__.get('database'):
         database =  psql_config.database
     else:
-        database =  sp_config.spreadsheetName
+        database =  sp_config.spreadsheet_name
     
     DBDRIVER = psql_config.__dict__.get("DRIVER","postgresql")
     
     uri = f"{DBDRIVER}://{psql_config.username}:{psql_config.password}@{psql_config.host}:{psql_config.port}"
 
     if not database_exists(uri,database):
-        create_database()
+        create_database(uri,database)
     
     url_with_db = _set_url_database(uri,database)
     
-    engine = sa.create_engine(db_uri, echo=True)
+    engine = sa.create_engine(url_with_db, echo=True)
 
+    main_sheet = GoogleSheetHelper(sp_config.credential_path, sp_config.spreadsheet_name)
+
+    if sp_config.backup_all_worksheets:
+        wrksheet_list = main_sheet.getAllWorksheet()
+    else:
+        wrksheet_list =  sp_config.worksheet_to_consider
+
+    for wrksht in wrksheet_list:
+        df = main_sheet.getDataframe(wrksht)
+        table_name = wrksht
+        current_utc = datetime.datetime.utcnow()
+        df["CreatedUTC"] = current_utc
+        df.to_sql(
+            table_name,
+            engine,
+            if_exists='replace',
+            index=False,
+            chunksize=500,
+        )
 
 
 if __name__ == "__main__":
     pass
 
-    def _set_url_database(url: sa.engine.url.URL, database):
-    """Set the database of an engine URL.
-
-    :param url: A SQLAlchemy engine URL.
-    :param database: New database to set.
-
-    """
-    if hasattr(sa.engine, 'URL'):
-        ret = sa.engine.URL.create(
-            drivername=url.drivername,
-            username=url.username,
-            password=url.password,
-            host=url.host,
-            port=url.port,
-            database=database,
-            query=url.query
-        )
-    else:  # SQLAlchemy <1.4
-        url.database = database
-        ret = url
-    assert ret.database == database, ret
-    return ret
+    excecute()
