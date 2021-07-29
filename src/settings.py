@@ -6,10 +6,10 @@ from .coresettings import Checksettings
 
 
 class Spreadsheet_config(Checksettings):
-    credential_path= '/home/abhishek/projects/kevin_proj/infinite-glow-320413-5abe1e1bb9ed.json'
-    # credential_path = os.environ['JSON_CRED']
+    
+    credential_path = os.environ['JSON_OAUTH_PATH']
     spreadsheet_name = "google_postgres"
-    backup_all_worksheets = True      
+    backup_all_worksheets = True     
     worksheet_to_consider = []         # should be emtry if backup_all_worksheet is True
 
 

@@ -30,6 +30,9 @@ def perform_sp_check(dic):
     if not isinstance(dic.get("spreadsheet_name"),str): 
         msg = "spreadsheet_name is not a string or not defined"
         raise WrongSettings(msg)
+    if not isinstance(dic.get("credential_path"),str):
+        msg = "Invallid path provided"
+        raise WrongSettings(msg)
     return True
 
 
