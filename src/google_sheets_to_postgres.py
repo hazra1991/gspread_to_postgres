@@ -7,6 +7,20 @@ from sqlalchemy.engine import make_url
 # from sqlalchemy.types import Integer, Text, String, DateTime
 import datetime
 
+from threading import Thread 
+from queue import Queue
+
+class Worker(Thread):
+    def __init__(self ,queue = None,*args,**kw):
+        self.callback = kw.get('target',None)
+        self.queue = queue
+        super().__init__(*args,**kw)
+    
+    def run(self):
+        while True:
+            engine,main_sheet,wrksht =  self.queue.get()
+            self.callback(engine,main_sheet,wrksht)
+            self.queue.task_done()
 
 class GoogleSheetHelper:
     """Helper class to pull data from googlesheets"""
@@ -70,7 +84,7 @@ def create_db_if_not_exists(url:str,dbname:str):
 
 def create_table(engine,main_sheet,wrksht):
     """ Function thats actualy takes the Database and creates a entry inside the postgresSQL server"""
-    print('Hi')
+
     df = main_sheet.getDataframe(wrksht)
     table_name = wrksht
     current_utc = datetime.datetime.utcnow()
@@ -85,8 +99,10 @@ def create_table(engine,main_sheet,wrksht):
     return True
 
     
-def execute():
+def execute(max_worker = 5):
     """ The main function that create the migration and performes it """
+    if max_worker > 15:
+        raise RuntimeError("cannot creat workers above 15")
 
     from .settings import Spreadsheet_config as sp_config
     from .settings import PostgresSQL_config as psql_config
@@ -112,8 +128,18 @@ def execute():
     else:
         wrksheet_list =  sp_config.worksheet_to_consider
 
+    qu = Queue()  
+    threadlist = []
+    for _ in range(max_worker):
+        t = Worker(queue=qu,target=create_table,daemon=True)
+        t.start()
+        # threadlist.append(t)
+
     for wrksht in wrksheet_list:
-        create_table(engine,main_sheet,wrksht)
+        # create_table(engine,main_sheet,wrksht)
+        qu.put((engine,main_sheet,wrksht))
+    qu.join()
+
         
     
         

@@ -6,7 +6,7 @@ from .coresettings import Checksettings
 
 
 class Spreadsheet_config(Checksettings):
-    
+ 
     credential_path = os.environ['JSON_OAUTH_PATH']
     spreadsheet_name = "google_postgres"
     backup_all_worksheets = True     
